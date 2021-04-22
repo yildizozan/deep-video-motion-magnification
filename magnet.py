@@ -1,3 +1,5 @@
+# Save the new magnet .py file from the repo just with a change that default library is ffmpeg.
+%%writefile magnet.py
 from __future__ import print_function
 
 import os
@@ -20,7 +22,7 @@ from preprocessor import preprocess_image, preproc_color
 from data_loader import read_and_decode_3frames
 
 # Change here if you use ffmpeg.
-DEFAULT_VIDEO_CONVERTER = 'avconv'
+DEFAULT_VIDEO_CONVERTER = 'ffmpeg'
 
 
 class MagNet3Frames(object):
@@ -197,7 +199,6 @@ class MagNet3Frames(object):
 
     def setup_for_inference(self, checkpoint_dir, image_width, image_height):
         """Setup model for inference.
-
         Build computation graph, initialize variables, and load checkpoint.
         """
         self.image_width = image_width
@@ -216,7 +217,6 @@ class MagNet3Frames(object):
 
     def inference(self, frameA, frameB, amplification_factor):
         """Run Magnification on two frames.
-
         Args:
             frameA: path to first frame
             frameB: path to second frame
@@ -240,7 +240,6 @@ class MagNet3Frames(object):
             amplification_factor,
             velocity_mag=False):
         """Magnify a video in the two-frames mode.
-
         Args:
             checkpoint_dir: checkpoint directory.
             vid_dir: directory containing video frames videos are processed
@@ -338,7 +337,6 @@ class MagNet3Frames(object):
                      n_filter_tap,
                      filter_type):
         """Magnify video with a temporal filter.
-
         Args:
             checkpoint_dir: checkpoint directory.
             vid_dir: directory containing video frames videos are processed
@@ -665,4 +663,3 @@ class MagNet3Frames(object):
         finally:
             coord.request_stop()
             coord.join(threads)
-
