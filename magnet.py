@@ -1,5 +1,3 @@
-# Save the new magnet .py file from the repo just with a change that default library is ffmpeg.
-%%writefile magnet.py
 from __future__ import print_function
 
 import os
