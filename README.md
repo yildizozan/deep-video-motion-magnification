@@ -15,13 +15,41 @@ Collaborators:
 
 Install required packages:
 
-```
+Need Python3.6
+```shell
 sudo apt-get install python-dev 	# required to install setproctitle
 pip install -r requirements.txt
 ```
 
 This code has been tested with Tensorflow 1.3 and 1.8, CUDA 8.5 and 9.1, Ubuntu 14.04 and 16.04, although we expect it to work with any newer versions of Tensorflow and CUDA.
 
+```shell
+# Downloading CUDA 8.0.61
+wget https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda-repo-ubuntu1604-8-0-local-ga2_8.0.61-1_amd64-deb
+
+# Unpacking the .deb file for installation
+sudo dpkg -i cuda-repo-ubuntu1604-8-0-local-ga2_8.0.61-1_amd64-deb
+
+# Unpacking performance update
+wget https://developer.nvidia.com/compute/cuda/8.0/Prod2/patches/2/cuda-repo-ubuntu1604-8-0-local-cublas-performance-update_8.0.61-1_amd64-deb
+dpkg -i cuda-repo-ubuntu1604-8-0-local-cublas-performance-update_8.0.61-1_amd64
+
+# Doing an Update to ensure no anamolaties
+apt-get update
+
+# Install the newly downloaded CUDA
+apt-get install cuda=8.0.61-1
+
+# Since with CUDA 8.0.xx we need Libcudnn 6.xx we have to install it.
+wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libcudnn6_6.0.21-1%2Bcuda8.0_amd64.deb
+wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libcudnn6-dev_6.0.21-1%2Bcuda8.0_amd64.deb
+
+# Installing CUDNN 6.0.xx
+sudo dpkg -i libcudnn6_6.0.21-1+cuda8.0_amd64.deb
+sudo dpkg -i libcudnn6-dev_6.0.21-1+cuda8.0_amd64.deb
+sudo apt-get update
+sudo apt-get install libcudnn6-dev
+```
 
 # Running
 
