@@ -1,23 +1,23 @@
 from __future__ import print_function
 
 import os
-import tensorflow as tf
-import numpy as np
-import cv2
 import time
-
-from glob import glob
-from scipy.signal import firwin, butter
 from functools import partial
-from tqdm import tqdm, trange
+from glob import glob
 from subprocess import call
 
+import cv2
+import numpy as np
+import tensorflow as tf
+from scipy.signal import firwin, butter
+from tqdm import tqdm, trange
+
+from data_loader import read_and_decode_3frames
 from modules import L1_loss
 from modules import res_encoder, res_decoder, res_manipulator
 from modules import residual_block, conv2d
+from preprocessor import preprocess_image
 from utils import load_train_data, mkdir, imread, save_images
-from preprocessor import preprocess_image, preproc_color
-from data_loader import read_and_decode_3frames
 
 # Change here if you use ffmpeg.
 DEFAULT_VIDEO_CONVERTER = 'ffmpeg'
@@ -104,9 +104,9 @@ class MagNet3Frames(object):
     def _decoder(self, texture_enc, shape_enc):
         if self.texture_downsample:
             texture_enc = tf.image.resize_nearest_neighbor(
-                            texture_enc,
-                            tf.shape(texture_enc)[1:3] \
-                            * 2)
+                texture_enc,
+                tf.shape(texture_enc)[1:3] \
+                * 2)
             texture_enc = tf.pad(texture_enc, [[0, 0], [1, 1], [1, 1], [0, 0]],
                                  "REFLECT")
             texture_enc = tf.nn.relu(conv2d(texture_enc, self.texture_dims,
@@ -175,22 +175,22 @@ class MagNet3Frames(object):
     def _build_feed_model(self):
         self.test_input = tf.placeholder(tf.float32,
                                          [None, None, None,
-                                             self.n_channels * 3],
+                                          self.n_channels * 3],
                                          name='test_AB_and_output')
         self.test_amplification_factor = tf.placeholder(tf.float32,
                                                         [None],
                                                         name='amplification_factor')
         self.test_image_a = self.test_input[:, :, :, :self.n_channels]
         self.test_image_b = self.test_input[:, :, :, self.n_channels:(2 * self.n_channels)]
-        self.test_amplified_frame = self.test_input[:, :, :, (2*self.n_channels):(3 * self.n_channels)]
+        self.test_amplified_frame = self.test_input[:, :, :, (2 * self.n_channels):(3 * self.n_channels)]
         self.test_output = self.image_transformer(
-                               self.test_image_a,
-                               self.test_image_b,
-                               self.test_amplification_factor,
-                               [self.image_height, self.image_width],
-                               self.arch_config,
-                               False,
-                               False)
+            self.test_image_a,
+            self.test_image_b,
+            self.test_amplification_factor,
+            [self.image_height, self.image_width],
+            self.arch_config,
+            False,
+            False)
         self.test_output = tf.clip_by_value(self.test_output, -1.0, 1.0)
         self.saver = tf.train.Saver()
         self.is_graph_built = True
@@ -221,13 +221,13 @@ class MagNet3Frames(object):
             amplification_factor: float for amplification factor
         """
         in_frames = [load_train_data([frameA, frameB, frameB],
-                     gray_scale=self.n_channels==1, is_testing=True)]
+                                     gray_scale=self.n_channels == 1, is_testing=True)]
         in_frames = np.array(in_frames).astype(np.float32)
 
         out_amp = self.sess.run(self.test_output,
                                 feed_dict={self.test_input: in_frames,
                                            self.test_amplification_factor:
-                                           [amplification_factor]})
+                                               [amplification_factor]})
         return out_amp
 
     def run(self,
@@ -280,7 +280,7 @@ class MagNet3Frames(object):
         call([DEFAULT_VIDEO_CONVERTER, '-y', '-f', 'image2', '-r', '30', '-i',
               os.path.join(out_dir, '%06d.png'), '-c:v', 'libx264',
               os.path.join(out_dir, vid_name + '.mp4')]
-            )
+             )
 
     # Temporal Operations
     def _build_IIR_filtering_graphs(self):
@@ -289,7 +289,7 @@ class MagNet3Frames(object):
         """
         self.input_image = tf.placeholder(tf.float32,
                                           [1, self.image_height,
-                                              self.image_width,
+                                           self.image_width,
                                            self.n_channels],
                                           name='input_image')
         self.filtered_enc = tf.placeholder(tf.float32,
@@ -319,9 +319,9 @@ class MagNet3Frames(object):
                 self.out_shape_enc += self.ref_shape_enc - self.filtered_enc
             with tf.variable_scope('decoder'):
                 self.output_image = tf.clip_by_value(
-                                        self._decoder(self.out_texture_enc,
-                                                      self.out_shape_enc),
-                                        -1.0, 1.0)
+                    self._decoder(self.out_texture_enc,
+                                  self.out_shape_enc),
+                    -1.0, 1.0)
 
         self.saver = tf.train.Saver()
 
@@ -356,7 +356,7 @@ class MagNet3Frames(object):
             filter_b = firwin(n_filter_tap, [fl, fh], nyq=nyq, pass_zero=False)
             filter_a = []
         elif filter_type == 'butter':
-            filter_b, filter_a = butter(n_filter_tap, [fl/nyq, fh/nyq],
+            filter_b, filter_a = butter(n_filter_tap, [fl / nyq, fh / nyq],
                                         btype='bandpass')
             filter_a = filter_a[1:]
         elif filter_type == 'differenceOfIIR':
@@ -365,7 +365,7 @@ class MagNet3Frames(object):
             # Write down the difference of difference equation in Fourier
             # domain to proof this:
             filter_b = [fh - fl, fl - fh]
-            filter_a = [-1.0*(2.0 - fh - fl), (1.0 - fl) * (1.0 - fh)]
+            filter_a = [-1.0 * (2.0 - fh - fl), (1.0 - fl) * (1.0 - fh)]
         else:
             raise ValueError('Filter type must be either '
                              '["fir", "butter", "differenceOfIIR"] got ' + \
@@ -412,13 +412,13 @@ class MagNet3Frames(object):
                 frame_no, _ = os.path.splitext(file_name)
                 frame_no = int(frame_no)
                 in_frames = [load_train_data([frame, frame, frame],
-                             gray_scale=self.n_channels==1, is_testing=True)]
+                                             gray_scale=self.n_channels == 1, is_testing=True)]
                 in_frames = np.array(in_frames).astype(np.float32)
 
                 texture_enc, x = self.sess.run([self.texture_enc, self.shape_rep],
                                                feed_dict={
                                                    self.input_image:
-                                                   in_frames[:, :, :, :3],})
+                                                       in_frames[:, :, :, :3], })
                 x_state.insert(0, x)
                 # set up initial condition.
                 while len(x_state) < len(filter_b):
@@ -437,15 +437,15 @@ class MagNet3Frames(object):
 
                 out_amp = self.sess.run(self.output_image,
                                         feed_dict={self.out_texture_enc:
-                                                     texture_enc,
+                                                       texture_enc,
                                                    self.filtered_enc: y,
                                                    self.ref_shape_enc: x,
                                                    self.amplification_factor:
-                                                     [amplification_factor]})
+                                                       [amplification_factor]})
 
                 im_path = os.path.join(out_dir, file_name)
                 out_amp = np.squeeze(out_amp)
-                out_amp = (127.5*(out_amp+1)).astype('uint8')
+                out_amp = (127.5 * (out_amp + 1)).astype('uint8')
                 cv2.imwrite(im_path, cv2.cvtColor(out_amp,
                                                   code=cv2.COLOR_RGB2BGR))
         else:
@@ -456,13 +456,13 @@ class MagNet3Frames(object):
                                  desc='Getting encoding'):
                 file_name = os.path.basename(frame)
                 in_frames = [load_train_data([frame, frame, frame],
-                                             gray_scale=self.n_channels==1, is_testing=True)]
+                                             gray_scale=self.n_channels == 1, is_testing=True)]
                 in_frames = np.array(in_frames).astype(np.float32)
 
                 texture_enc, x = self.sess.run([self.texture_enc, self.shape_rep],
                                                feed_dict={
                                                    self.input_image:
-                                                      in_frames[:, :, :, :3],})
+                                                       in_frames[:, :, :, :3], })
                 if x_state is None:
                     x_state = np.zeros(x.shape + (len(vid_frames),),
                                        dtype='float32')
@@ -481,13 +481,13 @@ class MagNet3Frames(object):
                 frame_no, _ = os.path.splitext(file_name)
                 frame_no = int(frame_no)
                 in_frames = [load_train_data([frame, frame, frame],
-                                             gray_scale=self.n_channels==1, is_testing=True)]
+                                             gray_scale=self.n_channels == 1, is_testing=True)]
                 in_frames = np.array(in_frames).astype(np.float32)
                 texture_enc, _ = self.sess.run([self.texture_enc, self.shape_rep],
                                                feed_dict={
                                                    self.input_image:
-                                                      in_frames[:, :, :, :3],
-                                                         })
+                                                       in_frames[:, :, :, :3],
+                                               })
                 out_amp = self.sess.run(self.output_image,
                                         feed_dict={self.out_texture_enc: texture_enc,
                                                    self.filtered_enc: x_state[:, :, :, :, i],
@@ -496,7 +496,7 @@ class MagNet3Frames(object):
 
                 im_path = os.path.join(out_dir, file_name)
                 out_amp = np.squeeze(out_amp)
-                out_amp = (127.5*(out_amp+1)).astype('uint8')
+                out_amp = (127.5 * (out_amp + 1)).astype('uint8')
                 cv2.imwrite(im_path, cv2.cvtColor(out_amp,
                                                   code=cv2.COLOR_RGB2BGR))
             del x_state
@@ -505,15 +505,15 @@ class MagNet3Frames(object):
         call([DEFAULT_VIDEO_CONVERTER, '-y', '-f', 'image2', '-r', '30', '-i',
               os.path.join(out_dir, '%06d.png'), '-c:v', 'libx264',
               os.path.join(out_dir, vid_name + '.mp4')]
-            )
+             )
 
     # Training code.
     def _build_training_graph(self, train_config):
         self.global_step = tf.Variable(0, trainable=False)
         filename_queue = tf.train.string_input_producer(
-                            [os.path.join(train_config["dataset_dir"],
-                                          'train.tfrecords')],
-                            num_epochs=train_config["num_epochs"])
+            [os.path.join(train_config["dataset_dir"],
+                          'train.tfrecords')],
+            num_epochs=train_config["num_epochs"])
         frameA, frameB, frameC, frameAmp, amplification_factor = \
             read_and_decode_3frames(filename_queue,
                                     (train_config["image_height"],
@@ -522,7 +522,7 @@ class MagNet3Frames(object):
         min_after_dequeue = 1000
         num_threads = 16
         capacity = min_after_dequeue + \
-            (num_threads + 2) * train_config["batch_size"]
+                   (num_threads + 2) * train_config["batch_size"]
 
         frameA, frameB, frameC, frameAmp, amplification_factor = \
             tf.train.shuffle_batch([frameA,
@@ -550,7 +550,7 @@ class MagNet3Frames(object):
         if self.reg_loss and train_config["weight_decay"] > 0.0:
             print("Adding Regularization Weights.")
             self.loss = self.loss_function(self.output, frameAmp) + \
-                train_config["weight_decay"] * tf.add_n(self.reg_loss)
+                        train_config["weight_decay"] * tf.add_n(self.reg_loss)
         else:
             print("No Regularization Weights.")
             self.loss = self.loss_function(self.output, frameAmp)
@@ -559,8 +559,8 @@ class MagNet3Frames(object):
         with tf.variable_scope('ynet_3frames/encoder', reuse=True):
             texture_c, shape_c = self._encoder(frameC)
             self.loss = self.loss + \
-                train_config["texture_loss_weight"] * L1_loss(texture_c, self.texture_a) + \
-                train_config["shape_loss_weight"] * L1_loss(shape_c, self.shape_b)
+                        train_config["texture_loss_weight"] * L1_loss(texture_c, self.texture_a) + \
+                        train_config["shape_loss_weight"] * L1_loss(shape_c, self.shape_b)
 
         self.loss_sum = tf.summary.scalar('train_loss', self.loss)
         self.image_sum = tf.summary.image('train_B_OUT',
@@ -641,15 +641,15 @@ class MagNet3Frames(object):
                 if global_step % 100 == 0:
                     # Write image summary.
                     img_sum_str, img_comp_str, img_orig_str = \
-                            self.sess.run([self.image_sum,
-                                           self.image_comp_sum,
-                                           self.image_orig_comp_sum])
+                        self.sess.run([self.image_sum,
+                                       self.image_comp_sum,
+                                       self.image_orig_comp_sum])
                     self.writer.add_summary(img_sum_str, global_step)
                     self.writer.add_summary(img_comp_str, global_step)
                     self.writer.add_summary(img_orig_str, global_step)
 
                 elapsed_time = time.time() - start_time
-                print ("Steps: %2d time: %4.4f (%4.4f steps/sec)" % (
+                print("Steps: %2d time: %4.4f (%4.4f steps/sec)" % (
                     global_step, elapsed_time,
                     float(global_step) / elapsed_time))
 

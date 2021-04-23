@@ -1,8 +1,6 @@
 from __future__ import division
-import tensorflow as tf
+
 from ops import *
-from utils import *
-import numpy as np
 
 
 def res_manipulator(enc_a,

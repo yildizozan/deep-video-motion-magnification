@@ -1,17 +1,18 @@
 import argparse
-import os
 import glob
-import sys
-import numpy as np
-from tqdm import tqdm
+import json
+import os
+
 import cv2
 import tensorflow as tf
-import json
+from tqdm import tqdm
 
 FLAGS = None
 
+
 def _float_feature(value):
     return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
+
 
 def _bytes_feature(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
@@ -66,7 +67,7 @@ def convert_dataset(data_dir, out_name, color=False):
             'frameC': _bytes_feature(image_c_raw),
             'amplified': _bytes_feature(flow_raw),
             'amplification_factor': _float_feature(amplification_factor),
-            }))
+        }))
         writer.write(example.SerializeToString())
     writer.close()
 

@@ -1,12 +1,12 @@
 import argparse
 import os
-import shutil
-import tensorflow as tf
+
 import setproctitle
+import tensorflow as tf
 from configobj import ConfigObj
 from validate import Validator
-from magnet import MagNet3Frames
 
+from magnet import MagNet3Frames
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--phase', dest='phase', default='train',

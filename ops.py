@@ -1,10 +1,5 @@
-import math
-import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-from tensorflow.python.framework import ops
-
-from utils import *
 
 
 def batch_norm(x, name="batch_norm"):
