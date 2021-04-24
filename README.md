@@ -13,7 +13,7 @@ Collaborators:
 
 # Installation
 
-Install required packages:
+Install required packages: ffmpeg, Python3.6, CUDA 8, 8.5 and 9.1
 
 Need Python3.6
 ```shell
