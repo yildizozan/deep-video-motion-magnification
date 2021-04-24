@@ -87,6 +87,36 @@ avconv -i <path_to_input>/baby.mp4 -f image2 <path_to_output>/baby/%06d.png
 
 For custom video and output location, you should look into modifying the two scripts directly. For custom checkpoint location, look in the configuration file under `configs/`. There should be an option for checkpoint location that you can edit.
 
+# Example
+
+```shell
+# Download the pretrained model into the folder after confirming that you are in the repo's folder.
+wget https://people.csail.mit.edu/tiam/deepmag/data.zip
+
+# Unzip the Folder
+unzip data.zip
+
+# Delete the zip.
+rm -r data.zip
+
+# For testing purpose you have to follow link on the github repo, we are using the same baby video to show the working.
+wget https://people.csail.mit.edu/mrub/evm/video/baby.mp4
+
+# We have to extract the frames to the corresponding folder.
+# 1. Create the corresponding folder (Last 'baby' should be replaced by your video name)
+mkdir data/vids/baby 
+
+# 2. Extract the frames to that corresponding folder. ('ffmpeg -i source -f image2 destination')
+ffmpeg -i baby.mp4 -f image2 data/vids/baby/%06d.png
+
+# To run the test script we are using the dynamic mode you can use any mode that is specified by the author.
+sh run_on_test_videos.sh o3f_hmhm2_bg_qnoise_mix4_nl_n_t_ds3 baby 10 yes
+
+# Result
+cd data/output/baby
+
+```
+
 
 # Training
 
